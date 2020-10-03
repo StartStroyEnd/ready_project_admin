@@ -10,57 +10,100 @@
         <span>电商后台管理系统</span>
       </div>
       <!-- 右侧 -->
-      <el-button type="info">退出登录</el-button>
+      <el-button type="info" @click="logout">退出登录</el-button>
     </el-header>
     <el-container>
       <!-- 左侧路由导航菜单栏 -->
       <el-aside :width="isCollapse ? '64px' : '200px'" style="text-align:left">
         <div class="toggle-button" @click="togleCollapse">|||</div>
         <el-menu
+          router
+          :unique-opened="true"
           :collapse="isCollapse"
           :collapse-transition="false"
           background-color="#333744"
           text-color="#fff"
           active-text-color="#ffd04b"
+          :default-active="activePath"
         >
-          <el-submenu index="111">
+          <el-submenu
+            :index="item.id + ''"
+            v-for="item in menuList"
+            :key="item.id"
+          >
             <template slot="title">
-              <i class="el-icon-location"></i>
-              <span>用户管理</span>
+              <i :class="iconObj[item.id]"></i>
+              <span>{{ item.authName }}</span>
             </template>
-            <el-menu-item-group>
-              <el-menu-item index="1-1">用户列表</el-menu-item>
-            </el-menu-item-group>
+            <el-menu-item
+              :index="'/' + subItem.path"
+              v-for="subItem in item.children"
+              :key="subItem.id"
+              @click="savePath('/' + subItem.path)"
+            >
+              <template slot="title">
+                <i class="el-icon-menu"></i>
+                <span>{{ subItem.authName }}</span>
+              </template>
+            </el-menu-item>
           </el-submenu>
         </el-menu>
       </el-aside>
       <!-- 内容区 -->
-      <el-main>Main</el-main>
+      <el-main>
+        <router-view></router-view>
+      </el-main>
     </el-container>
   </el-container>
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 export default {
   name: "Home",
   data() {
     return {
       isCollapse: false,
+      // 菜单列表图标
+      iconObj: {
+        "125": "iconfont icon-user",
+        "103": "iconfont icon-tijikongjian",
+        "101": "iconfont icon-shangpin",
+        "102": "iconfont icon-danju",
+        "145": "iconfont icon-baobiao",
+      },
+      // 当前被激活的导航地址
+      activePath: "",
     };
   },
+  created() {
+    this.getMenuList();
+
+    // 保存当前路由路径到实例data
+    console.log(this.activePath);
+    this.activePath = window.sessionStorage.getItem("activePath");
+  },
   methods: {
-    // 展开分类菜单
-    handleOpen(key, keyPath) {
-      console.log(key, keyPath);
+    // 保存当前路由路径
+    savePath(path) {
+      window.sessionStorage.setItem("activePath", path);
     },
-    // 关闭分类菜单
-    handleClose(key, keyPath) {
-      console.log(key, keyPath);
+    // 获取菜单列表数据
+    getMenuList() {
+      this.$store.dispatch("getMenuList");
+    },
+    // 退出登录
+    logout() {
+      window.sessionStorage.clear();
+      this.$router.push("/login");
     },
     // 展开/收缩菜单栏
     togleCollapse() {
       this.isCollapse = !this.isCollapse;
     },
+  },
+  computed: {
+    ...mapGetters(["menuList"]),
   },
 };
 </script>

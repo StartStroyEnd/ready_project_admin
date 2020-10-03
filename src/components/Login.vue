@@ -51,6 +51,7 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 export default {
   name: "Login",
   data() {
@@ -91,19 +92,20 @@ export default {
       this.$refs.loginFormRef.validate(async (validata) => {
         // 当前的表单校验对象
         // 如果这个形参为true说明当前rules自定义表单校验对象成功
-        // console.log(validata);
         if (!validata) return false;
-        const { data: res } = await this.$http.post("login", this.userInfo);
-        if (res.meta.status !== 200)
-          return this.$message.error("对不起，登录失败，请稍后重试！");
-        this.$message.success("登录成功");
-
-        // 保存token
-        window.sessionStorage.setItem("token", res.data.token);
-        // 通过编程式导航跳转到后台主页
-        this.$router.push("/home");
+        await this.$store.dispatch("login", this.userInfo);
+        if (this.token) {
+          window.sessionStorage.setItem("tokenStr", this.token);
+          this.$message.success("登录成功！");
+          this.$router.push("/home");
+        } else {
+          this.$message.error("登录失败，请联系工作人员！");
+        }
       });
     },
+  },
+  computed: {
+    ...mapGetters(["token"]),
   },
 };
 </script>
